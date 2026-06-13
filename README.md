@@ -99,7 +99,7 @@ paniciot/
 
 ### Tecnologias
 - **Node.js + Express** — servidor e roteamento
-- **MySQL** — dados relacionais (usuários, dispositivos, eventos, zonas...)
+- **MySQL (XAMPP)** — dados relacionais (usuários, dispositivos, eventos, zonas...)
 - **MongoDB** — logs de auditoria
 - **JWT + bcrypt** — autenticação e hash de senhas
 - **Chart.js + jsPDF** — gráficos e geração de PDF no painel
