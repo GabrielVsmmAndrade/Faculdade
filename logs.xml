@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<logs>
+  <evento id="1">
+    <usuario>admin</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 16:20:33</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/export/json?table=events</endpoint>
+    <metodo>GET</metodo>
+    <status_code>200</status_code>
+  </evento>
+  <evento id="2">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 16:20:33</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>200</status_code>
+  </evento>
+  <evento id="3">
+    <usuario>admin</usuario>
+    <acao>LOGIN</acao>
+    <descricao>[object Object]</descricao>
+    <data_hora>2026-05-30 16:20:33</data_hora>
+    <tipo_evento>login</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint></endpoint>
+    <metodo></metodo>
+    <status_code></status_code>
+  </evento>
+  <evento id="4">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 16:06:15</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>200</status_code>
+  </evento>
+  <evento id="5">
+    <usuario>admin</usuario>
+    <acao>LOGIN</acao>
+    <descricao>[object Object]</descricao>
+    <data_hora>2026-05-30 16:06:15</data_hora>
+    <tipo_evento>login</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint></endpoint>
+    <metodo></metodo>
+    <status_code></status_code>
+  </evento>
+  <evento id="6">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 16:01:23</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/heartbeat</endpoint>
+    <metodo>POST</metodo>
+    <status_code>200</status_code>
+  </evento>
+  <evento id="7">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:58:51</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/users</endpoint>
+    <metodo>GET</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="8">
+    <usuario>admin</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:58:37</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/users</endpoint>
+    <metodo>GET</metodo>
+    <status_code>200</status_code>
+  </evento>
+  <evento id="9">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:57:42</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>200</status_code>
+  </evento>
+  <evento id="10">
+    <usuario>admin</usuario>
+    <acao>LOGIN</acao>
+    <descricao>[object Object]</descricao>
+    <data_hora>2026-05-30 15:57:42</data_hora>
+    <tipo_evento>login</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint></endpoint>
+    <metodo></metodo>
+    <status_code></status_code>
+  </evento>
+  <evento id="11">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:49:54</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="12">
+    <usuario>anonymous</usuario>
+    <acao>ERROR</acao>
+    <descricao>Credenciais inválidas</descricao>
+    <data_hora>2026-05-30 15:49:54</data_hora>
+    <tipo_evento>error</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="13">
+    <usuario>admin</usuario>
+    <acao>LOGIN</acao>
+    <descricao>[object Object]</descricao>
+    <data_hora>2026-05-30 15:49:54</data_hora>
+    <tipo_evento>login</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint></endpoint>
+    <metodo></metodo>
+    <status_code></status_code>
+  </evento>
+  <evento id="14">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:49:10</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="15">
+    <usuario>anonymous</usuario>
+    <acao>ERROR</acao>
+    <descricao>Credenciais inválidas</descricao>
+    <data_hora>2026-05-30 15:49:10</data_hora>
+    <tipo_evento>error</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="16">
+    <usuario>admin</usuario>
+    <acao>LOGIN</acao>
+    <descricao>[object Object]</descricao>
+    <data_hora>2026-05-30 15:49:10</data_hora>
+    <tipo_evento>login</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint></endpoint>
+    <metodo></metodo>
+    <status_code></status_code>
+  </evento>
+  <evento id="17">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:47:05</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/users</endpoint>
+    <metodo>GET</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="18">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:46:51</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/users</endpoint>
+    <metodo>GET</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="19">
+    <usuario>anonymous</usuario>
+    <acao>ACCESS</acao>
+    <descricao></descricao>
+    <data_hora>2026-05-30 15:46:44</data_hora>
+    <tipo_evento>access</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>401</status_code>
+  </evento>
+  <evento id="20">
+    <usuario>anonymous</usuario>
+    <acao>ERROR</acao>
+    <descricao>Expected property name or '}' in JSON at position 1 (line 1 column 2)</descricao>
+    <data_hora>2026-05-30 15:46:34</data_hora>
+    <tipo_evento>error</tipo_evento>
+    <ip_origem>127.0.0.1</ip_origem>
+    <endpoint>/api/auth/login</endpoint>
+    <metodo>POST</metodo>
+    <status_code>400</status_code>
+  </evento>
+</logs>

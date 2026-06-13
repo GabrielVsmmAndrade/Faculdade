@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PanicIoT — Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">PANICIOT / <span>Dashboard</span></span>
+      <div class="topbar-right">
+        <span class="badge-live">SISTEMA ONLINE</span>
+        <span class="poll-indicator" id="poll-info">Atualizando...</span>
+      </div>
+    </div>
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card red"><div class="stat-label">Total Ocorrências</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">registradas</div></div>
+        <div class="stat-card red"><div class="stat-label">Abertas</div><div class="stat-value" id="s-aberto">—</div><div class="stat-sub">aguardando</div></div>
+        <div class="stat-card yellow"><div class="stat-label">ACK</div><div class="stat-value" id="s-ack">—</div><div class="stat-sub">em andamento</div></div>
+        <div class="stat-card green"><div class="stat-label">Encerradas</div><div class="stat-value" id="s-encerrado">—</div><div class="stat-sub">resolvidas</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-title">Por Status</div>
+          <div class="chart-container"><canvas id="chart-status"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Dispositivos</div>
+          <div class="chart-container"><canvas id="chart-devices"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Recentes -->
+      <div class="card">
+        <div class="section-header">
+          <span class="section-title">Ocorrências Recentes</span>
+          <a href="/events.html" class="btn btn-ghost btn-sm">Ver todas →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>ID</th><th>Dispositivo</th><th>Nível</th><th>Status</th>
+              <th>Data/Hora</th><th>Local</th>
+            </tr></thead>
+            <tbody id="events-tbody"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Dispositivos -->
+      <div class="card mt-16">
+        <div class="section-header">
+          <span class="section-title">Dispositivos</span>
+          <a href="/devices.html" class="btn btn-ghost btn-sm">Ver todos →</a>
+        </div>
+        <div class="devices-grid" id="devices-grid"><div class="loading">Carregando...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Nav.init("dashboard");
+
+let chartStatus = null, chartDevices = null;
+
+const chartDefaults = {
+  plugins: { legend: { labels: { color: "#8080a8", font: { size: 11 } } } },
+  animation: { duration: 600 },
+};
+
+async function loadStats() {
+  const data = await API.get("/reports/events");
+  if (!data) return;
+  const t = data.totals;
+  document.getElementById("s-total").textContent    = t.total ?? 0;
+  document.getElementById("s-aberto").textContent   = t.by_status?.ABERTO    ?? 0;
+  document.getElementById("s-ack").textContent      = t.by_status?.ACK        ?? 0;
+  document.getElementById("s-encerrado").textContent= t.by_status?.ENCERRADO  ?? 0;
+
+  // Donut status
+  const statusCtx = document.getElementById("chart-status").getContext("2d");
+  const statusData = {
+    labels: ["Aberto","ACK","Encerrado"],
+    datasets: [{ data: [t.by_status?.ABERTO||0, t.by_status?.ACK||0, t.by_status?.ENCERRADO||0],
+      backgroundColor: ["rgba(255,43,78,.7)","rgba(255,214,0,.7)","rgba(0,230,118,.7)"],
+      borderColor: ["#ff2b4e","#ffd600","#00e676"], borderWidth: 2 }]
+  };
+  if (chartStatus) { chartStatus.data = statusData; chartStatus.update(); }
+  else chartStatus = new Chart(statusCtx, { type: "doughnut", data: statusData,
+    options: { ...chartDefaults, cutout: "68%",
+      plugins: { legend: { position: "bottom", labels: { color: "#8080a8", font: { size: 11 }, padding: 14 } } } }
+  });
+
+  // Devices bar
+  const byDev = t.by_device || {};
+  const devCtx = document.getElementById("chart-devices").getContext("2d");
+  const devData = {
+    labels: Object.keys(byDev),
+    datasets: [{ label: "Ocorrências", data: Object.values(byDev),
+      backgroundColor: "rgba(255,43,78,.5)", borderColor: "#ff2b4e", borderWidth: 2, borderRadius: 6 }]
+  };
+  if (chartDevices) { chartDevices.data = devData; chartDevices.update(); }
+  else chartDevices = new Chart(devCtx, { type: "bar", data: devData,
+    options: { ...chartDefaults, scales: {
+      x: { ticks: { color: "#8080a8" }, grid: { color: "rgba(255,255,255,.04)" } },
+      y: { ticks: { color: "#8080a8", stepSize: 1 }, grid: { color: "rgba(255,255,255,.04)" } }
+    }, plugins: { legend: { display: false } } }
+  });
+}
+
+async function loadEvents() {
+  const events = await API.get("/events");
+  if (!events) return;
+  const tbody = document.getElementById("events-tbody");
+  if (!events.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhuma ocorrência</td></tr>'; return; }
+  tbody.innerHTML = events.slice(0,10).map(e => `
+    <tr onclick="location.href='/event-detail.html?id=${e.id}'">
+      <td class="mono">#${e.id}</td>
+      <td>${e.device_uid}</td>
+      <td>${levelBadge(e.level)}</td>
+      <td>${statusBadge(e.status)}</td>
+      <td class="mono">${fmtDate(e.occurred_at)}</td>
+      <td>${e.location || "—"}</td>
+    </tr>`).join("");
+}
+
+async function loadDevices() {
+  const devices = await API.get("/devices");
+  if (!devices) return;
+  const grid = document.getElementById("devices-grid");
+  if (!devices.length) { grid.innerHTML = '<div class="empty-state">Nenhum dispositivo</div>'; return; }
+  grid.innerHTML = devices.map(d => `
+    <div class="device-card ${d.online ? 'online' : 'offline'}">
+      <div class="device-name">${d.name}</div>
+      <div class="device-uid">${d.device_uid}</div>
+      <div class="device-location">📍 ${d.location}</div>
+      <div class="device-last-seen">
+        <span class="badge ${d.online ? 'badge-online' : 'badge-offline'}">${d.online ? 'ONLINE' : 'OFFLINE'}</span>
+        &nbsp; ${fmtDate(d.last_seen)}
+      </div>
+    </div>`).join("");
+}
+
+async function refresh() {
+  await Promise.all([loadStats(), loadEvents(), loadDevices()]);
+  document.getElementById("poll-info").textContent = "Atualizado " + new Date().toLocaleTimeString("pt-BR");
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+  "table": "events",
+  "exported_at": "2026-05-30T16:20:33.830Z",
+  "total": 6,
+  "data": [
+    {
+      "id": 1,
+      "device_id": 1,
+      "event_uid": "esp32-01-0000001",
+      "type": "PANIC",
+      "level": "ALTO",
+      "status": "ENCERRADO",
+      "occurred_at": "2026-05-10T12:15:00.000Z",
+      "received_at": "2026-05-22T22:33:05.000Z",
+      "lat": null,
+      "lon": null,
+      "wifi_hint": null,
+      "notes": null
+    },
+    {
+      "id": 2,
+      "device_id": 1,
+      "event_uid": "esp32-01-0000002",
+      "type": "PANIC",
+      "level": "ALTO",
+      "status": "ACK",
+      "occurred_at": "2026-05-15T17:30:00.000Z",
+      "received_at": "2026-05-22T22:33:05.000Z",
+      "lat": null,
+      "lon": null,
+      "wifi_hint": null,
+      "notes": null
+    },
+    {
+      "id": 3,
+      "device_id": 1,
+      "event_uid": "esp32-01-0000003",
+      "type": "PANIC",
+      "level": "ALTO",
+      "status": "ENCERRADO",
+      "occurred_at": "2026-05-20T14:00:00.000Z",
+      "received_at": "2026-05-22T22:33:05.000Z",
+      "lat": null,
+      "lon": null,
+      "wifi_hint": null,
+      "notes": null
+    },
+    {
+      "id": 4,
+      "device_id": 1,
+      "event_uid": "esp32-01-0000004",
+      "type": "PANIC",
+      "level": "MEDIO",
+      "status": "ABERTO",
+      "occurred_at": "2026-05-21T19:45:00.000Z",
+      "received_at": "2026-05-22T22:33:05.000Z",
+      "lat": null,
+      "lon": null,
+      "wifi_hint": null,
+      "notes": null
+    },
+    {
+      "id": 5,
+      "device_id": 1,
+      "event_uid": "esp32-01-0000005",
+      "type": "PANIC",
+      "level": "ALTO",
+      "status": "ABERTO",
+      "occurred_at": "2026-05-22T11:20:00.000Z",
+      "received_at": "2026-05-22T22:33:05.000Z",
+      "lat": null,
+      "lon": null,
+      "wifi_hint": null,
+      "notes": null
+    },
+    {
+      "id": 6,
+      "device_id": 1,
+      "event_uid": "teste-curl-001",
+      "type": "PANIC",
+      "level": "ALTO",
+      "status": "ABERTO",
+      "occurred_at": "2026-05-30T15:30:06.000Z",
+      "received_at": "2026-05-30T15:30:06.000Z",
+      "lat": null,
+      "lon": null,
+      "wifi_hint": null,
+      "notes": "Teste manual"
+    }
+  ]
+}

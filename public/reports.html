@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PanicIoT — Relatórios</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .report-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .report-card-title { font-size: 12px; font-weight: 700; color: var(--t1); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; }
+    .report-card-desc  { font-size: 12px; color: var(--t3); margin-bottom: 16px; line-height: 1.5; }
+    .file-label { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-3); border: 1px dashed var(--border-md); border-radius: 7px; cursor: pointer; color: var(--t2); font-size: 13px; }
+    .file-label:hover { border-color: var(--red); color: var(--t1); }
+    .file-label input[type=file] { display: none; }
+    #file-name { font-size: 12px; color: var(--t3); margin-top: 6px; }
+    .import-result { margin-top: 12px; padding: 10px; border-radius: 7px; font-size: 12px; display: none; }
+    .import-result.success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,.25); }
+    .import-result.error   { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(255,43,78,.25); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">PANICIOT / <span>Relatórios & Exportação</span></span>
+    </div>
+    <div class="content">
+      <div class="report-grid">
+
+        <!-- PDF de Ocorrências -->
+        <div class="report-card">
+          <div class="report-card-title">📄 Relatório PDF</div>
+          <div class="report-card-desc">Gera relatório de ocorrências em PDF com totais, filtros por período e exportação para download.</div>
+          <div class="form-group">
+            <label class="form-label">De</label>
+            <input class="form-control" type="date" id="pdf-from">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Até</label>
+            <input class="form-control" type="date" id="pdf-to">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-control" id="pdf-status">
+              <option value="">Todos</option>
+              <option value="ABERTO">Aberto</option>
+              <option value="ACK">ACK</option>
+              <option value="ENCERRADO">Encerrado</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="generatePDF()">⬇ Gerar PDF</button>
+        </div>
+
+        <!-- Export XML Logs -->
+        <div class="report-card">
+          <div class="report-card-title">📋 Exportar Logs (XML)</div>
+          <div class="report-card-desc">Exporta os logs do sistema armazenados no MongoDB no formato XML com filtros opcionais.</div>
+          <div class="form-group">
+            <label class="form-label">Usuário (opcional)</label>
+            <input class="form-control" id="xml-user" placeholder="ex: admin">
+          </div>
+          <div class="form-group">
+            <label class="form-label">De</label>
+            <input class="form-control" type="date" id="xml-from">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Até</label>
+            <input class="form-control" type="date" id="xml-to">
+          </div>
+          <button class="btn btn-secondary" onclick="exportXML()">⬇ Exportar XML</button>
+        </div>
+
+        <!-- Export JSON -->
+        <div class="report-card">
+          <div class="report-card-title">📤 Exportar Dados (JSON)</div>
+          <div class="report-card-desc">Exporta qualquer tabela do banco MySQL como arquivo JSON estruturado.</div>
+          <div class="form-group">
+            <label class="form-label">Tabela</label>
+            <select class="form-control" id="exp-table">
+              <option value="events">events (ocorrências)</option>
+              <option value="devices">devices (dispositivos)</option>
+              <option value="users">users (usuários)</option>
+              <option value="zones">zones (zonas)</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" onclick="exportJSON()">⬇ Exportar JSON</button>
+        </div>
+
+        <!-- Import JSON -->
+        <div class="report-card">
+          <div class="report-card-title">📥 Importar Dados (JSON)</div>
+          <div class="report-card-desc">Importa registros de um arquivo JSON para o banco MySQL com validação de estrutura.</div>
+          <div class="form-group">
+            <label class="form-label">Tabela destino</label>
+            <select class="form-control" id="imp-table">
+              <option value="events">events</option>
+              <option value="zones">zones</option>
+              <option value="devices">devices</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Arquivo .json</label>
+            <label class="file-label">
+              📂 Clique para selecionar arquivo
+              <input type="file" id="imp-file" accept=".json">
+            </label>
+            <div id="file-name">Nenhum arquivo selecionado</div>
+          </div>
+          <button class="btn btn-secondary" onclick="importJSON()">⬆ Importar</button>
+          <div class="import-result" id="imp-result"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script>
+Nav.init("reports");
+
+// Datas padrão
+const today = new Date().toISOString().slice(0,10);
+const oneMonthAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0,10);
+document.getElementById("pdf-from").value  = oneMonthAgo;
+document.getElementById("pdf-to").value    = today;
+document.getElementById("xml-from").value  = oneMonthAgo;
+document.getElementById("xml-to").value    = today;
+
+// File picker label
+document.getElementById("imp-file").addEventListener("change", e => {
+  const f = e.target.files[0];
+  document.getElementById("file-name").textContent = f ? f.name : "Nenhum arquivo selecionado";
+});
+
+// ── Gerar PDF ─────────────────────────────────────────────────────────────────
+async function generatePDF() {
+  const from   = document.getElementById("pdf-from").value;
+  const to     = document.getElementById("pdf-to").value;
+  const status = document.getElementById("pdf-status").value;
+
+  let qs = "?";
+  if (from)   qs += `from=${from}&`;
+  if (to)     qs += `to=${to}&`;
+  if (status) qs += `status=${status}&`;
+
+  toast("Gerando relatório...", "info");
+  const data = await API.get("/reports/events" + qs);
+  if (!data) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const user = API.getUser();
+
+  // ── Cabeçalho — fundo branco com barra vermelha ───────────────────────────
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, 210, 40, "F");
+  doc.setFillColor(255, 43, 78);
+  doc.rect(0, 0, 210, 5, "F");                   // barra vermelha no topo
+
+  doc.setTextColor(255, 43, 78);
+  doc.setFontSize(18); doc.setFont("helvetica", "bold");
+  doc.text("PANICIOT", 14, 20);
+  doc.setTextColor(60, 60, 80);
+  doc.setFontSize(10); doc.setFont("helvetica", "normal");
+  doc.text("Relatório de Ocorrências", 14, 28);
+  doc.setFontSize(8); doc.setTextColor(120, 120, 140);
+  doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 35);
+  doc.text(`Operador: ${user?.full_name || user?.username || "—"}`, 100, 35);
+
+  // Linha separadora
+  doc.setDrawColor(220, 220, 230);
+  doc.setLineWidth(0.3);
+  doc.line(14, 42, 196, 42);
+
+  // Filtros
+  doc.setTextColor(100, 100, 120);
+  doc.setFontSize(9);
+  const filterText = `Período: ${from || "início"} até ${to || "hoje"}${status ? " · Status: " + status : ""}`;
+  doc.text(filterText, 14, 49);
+
+  // Totais — fundo cinza claro, números coloridos
+  const t = data.totals;
+  doc.setFillColor(245, 245, 250);
+  doc.roundedRect(14, 54, 55, 22, 2, 2, "F");
+  doc.roundedRect(74, 54, 55, 22, 2, 2, "F");
+  doc.roundedRect(134, 54, 62, 22, 2, 2, "F");
+
+  doc.setTextColor(220, 40, 70);  doc.setFontSize(16); doc.setFont("helvetica","bold");
+  doc.text(String(t.total || 0), 24, 65);
+  doc.setTextColor(180, 140, 0);
+  doc.text(String(t.by_status?.ACK || 0), 84, 65);
+  doc.setTextColor(20, 160, 80);
+  doc.text(String(t.by_status?.ENCERRADO || 0), 144, 65);
+
+  doc.setTextColor(140, 140, 160); doc.setFontSize(8); doc.setFont("helvetica","normal");
+  doc.text("TOTAL", 24, 72);
+  doc.text("ACK", 84, 72);
+  doc.text("ENCERRADAS", 144, 72);
+
+  // Tabela de eventos
+  const rows = (data.events || []).slice(0, 100).map(e => [
+    "#" + e.id,
+    e.device_uid,
+    e.level,
+    e.status,
+    new Date(e.occurred_at).toLocaleString("pt-BR"),
+    e.location || "—",
+  ]);
+
+  doc.autoTable({
+    startY: 84,
+    head: [["ID","Dispositivo","Nível","Status","Data/Hora","Local"]],
+    body: rows,
+    styles: {
+      fontSize: 8, cellPadding: 4,
+      textColor: [50, 50, 70],
+      fillColor: [255, 255, 255],
+      lineColor: [220, 220, 230],
+      lineWidth: 0.2,
+    },
+    headStyles: {
+      fillColor: [255, 43, 78],
+      textColor: [255, 255, 255],
+      fontStyle: "bold", fontSize: 8,
+    },
+    alternateRowStyles: { fillColor: [247, 247, 252] },
+    columnStyles: { 0: { cellWidth: 12 }, 4: { cellWidth: 38 } },
+    margin: { left: 14, right: 14 },
+  });
+
+  // Rodapé
+  const pages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(220, 220, 230);
+    doc.setLineWidth(0.3);
+    doc.line(14, 285, 196, 285);
+    doc.setFontSize(7); doc.setTextColor(140, 140, 160);
+    doc.text(`PanicIoT — Confidencial · Pág. ${i}/${pages}`, 14, 290);
+    doc.text(new Date().toLocaleDateString("pt-BR"), 180, 290);
+  }
+
+  doc.save(`relatorio_paniciot_${today}.pdf`);
+  toast("PDF gerado com sucesso!", "success");
+}
+
+// ── Exportar XML ──────────────────────────────────────────────────────────────
+async function exportXML() {
+  const user = document.getElementById("xml-user").value.trim();
+  const from = document.getElementById("xml-from").value;
+  const to   = document.getElementById("xml-to").value;
+  let qs = "?";
+  if (user) qs += `usuario=${user}&`;
+  if (from) qs += `from=${from}&`;
+  if (to)   qs += `to=${to}&`;
+
+  toast("Exportando logs...", "info");
+  const xml = await API.get("/logs/export/xml" + qs);
+  if (!xml) return;
+  download(xml, `logs_${Date.now()}.xml`, "application/xml");
+  toast("XML exportado!", "success");
+}
+
+// ── Exportar JSON ─────────────────────────────────────────────────────────────
+async function exportJSON() {
+  const table = document.getElementById("exp-table").value;
+  toast(`Exportando ${table}...`, "info");
+  const data = await API.get(`/export/json?table=${table}`);
+  if (!data) return;
+  const json = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+  download(json, `${table}_${Date.now()}.json`, "application/json");
+  toast("JSON exportado!", "success");
+}
+
+// ── Importar JSON ─────────────────────────────────────────────────────────────
+async function importJSON() {
+  const file  = document.getElementById("imp-file").files[0];
+  const table = document.getElementById("imp-table").value;
+  const res_el = document.getElementById("imp-result");
+  if (!file) { toast("Selecione um arquivo JSON", "error"); return; }
+
+  const form = new FormData();
+  form.append("file", file);
+
+  toast("Importando...", "info");
+  const res = await API.upload(`/import/json?table=${table}`, form);
+  res_el.style.display = "block";
+  if (res?.ok) {
+    res_el.className = "import-result success";
+    res_el.textContent = `✓ ${res.inserted} registro(s) inserido(s), ${res.skipped} ignorado(s).`;
+    toast("Importação concluída!", "success");
+  } else {
+    res_el.className = "import-result error";
+    res_el.textContent = `✗ ${res?.error || "Erro na importação"}`;
+  }
+}
+
+// ── Download helper ───────────────────────────────────────────────────────────
+function download(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

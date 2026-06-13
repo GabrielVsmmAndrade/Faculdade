@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PanicIoT — Dispositivos</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .apikey-wrap { display: flex; gap: 8px; align-items: center; }
+    .apikey-wrap .form-control { font-family: var(--ff-mono); font-size: 11px; }
+    .copy-hint { font-size: 11px; color: var(--t3); margin-top: 5px; }
+    .step-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--red-dim); color: var(--red);
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .firmware-block {
+      background: var(--bg-0); border: 1px solid var(--border);
+      border-radius: 7px; padding: 14px;
+      font-family: var(--ff-mono); font-size: 11.5px; color: var(--t1);
+      line-height: 1.8; white-space: pre; overflow-x: auto;
+    }
+    .firmware-block .cm  { color: var(--t3); }
+    .firmware-block .kw  { color: #c792ea; }
+    .firmware-block .str { color: var(--green); }
+    .firmware-block .key { color: var(--blue); }
+
+    /* Zona info */
+    .zone-info {
+      margin-top: 8px; padding: 10px 12px;
+      background: var(--bg-3); border: 1px solid var(--border);
+      border-radius: 7px; font-size: 12px;
+    }
+    .zone-info .zi-label { color: var(--t3); font-size: 10px; text-transform: uppercase;
+      letter-spacing: .1em; margin-bottom: 6px; }
+    .zone-users { display: flex; flex-wrap: wrap; gap: 6px; }
+    .zone-user-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 100px;
+      background: var(--bg-4); border: 1px solid var(--border-md);
+      font-size: 11px; color: var(--t1);
+    }
+    .zone-user-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .zone-empty { color: var(--yellow); font-size: 11px; }
+
+    /* Checkboxes de usuários */
+    .user-check-list { display: flex; flex-direction: column; gap: 6px; max-height: 160px;
+      overflow-y: auto; padding: 4px 0; }
+    .user-check-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px; border-radius: 7px; cursor: pointer;
+      border: 1px solid transparent; transition: all .15s;
+    }
+    .user-check-item:hover { background: var(--bg-4); }
+    .user-check-item.checked { background: var(--green-dim); border-color: rgba(0,230,118,.2); }
+    .user-check-item input[type=checkbox] { accent-color: var(--green); width: 14px; height: 14px; }
+    .user-check-item .uci-name { font-size: 13px; font-weight: 500; }
+    .user-check-item .uci-role { font-size: 10px; color: var(--t3); text-transform: uppercase; letter-spacing: .08em; }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">PANICIOT / <span>Dispositivos</span></span>
+      <div class="topbar-right">
+        <span class="badge-live">SISTEMA ONLINE</span>
+        <span id="poll-info" class="poll-indicator"></span>
+        <button class="btn btn-primary btn-sm" id="btn-new"
+          style="display:none" onclick="openNew()">+ Novo Dispositivo</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="section-header mb-16">
+        <span class="section-title">Dispositivos Cadastrados</span>
+        <span id="device-count" class="text-muted" style="font-size:12px"></span>
+      </div>
+      <div class="devices-grid" id="devices-grid"><div class="loading">Carregando...</div></div>
+
+      <div class="card mt-16">
+        <div class="card-title">Tabela Completa</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>UID</th><th>Nome</th><th>Local</th><th>Zona</th>
+              <th>Operadores com acesso</th><th>Status</th><th>Último Heartbeat</th>
+            </tr></thead>
+            <tbody id="tbody"><tr><td colspan="7" class="loading">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal cadastro ── -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" style="width:540px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">Cadastrar Novo Dispositivo</div>
+
+    <!-- Passo 1 — Identificação -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+      <span class="step-badge">1</span>
+      <span style="font-size:12px;color:var(--t2)">Identificação do hardware</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Device UID *</label>
+        <input class="form-control" id="m-uid" placeholder="ex: esp32-03"
+          style="font-family:var(--ff-mono)">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Zona *</label>
+        <select class="form-control" id="m-zone" onchange="onZoneChange()"></select>
+      </div>
+    </div>
+    <div class="form-group mt-16">
+      <label class="form-label">Nome do Botão *</label>
+      <input class="form-control" id="m-name" placeholder="ex: Botão Recepção 2">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Localização Física *</label>
+      <input class="form-control" id="m-location" placeholder="ex: 2º Andar / Sala 201">
+    </div>
+
+    <!-- Info da zona + usuários com acesso -->
+    <div class="zone-info" id="zone-info">
+      <div class="zi-label">Operadores que verão este dispositivo (zona selecionada)</div>
+      <div id="zone-users-preview"><span class="text-muted">Selecione uma zona</span></div>
+    </div>
+
+    <!-- Passo 2 — Atribuir usuários -->
+    <div style="display:flex;gap:8px;align-items:center;margin:18px 0 10px">
+      <span class="step-badge">2</span>
+      <span style="font-size:12px;color:var(--t2)">Atribuir operadores à zona (opcional)</span>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px">
+      Marque os operadores que devem visualizar eventos deste dispositivo.
+      Operadores já vinculados à zona aparecem marcados.
+    </div>
+    <div class="user-check-list" id="user-checklist">
+      <div class="loading">Carregando usuários...</div>
+    </div>
+
+    <!-- Passo 3 — API Key -->
+    <div style="display:flex;gap:8px;align-items:center;margin:18px 0 10px">
+      <span class="step-badge">3</span>
+      <span style="font-size:12px;color:var(--t2)">API Key do dispositivo</span>
+    </div>
+    <div class="form-group">
+      <label class="form-label">API Key (64 hex) *</label>
+      <div class="apikey-wrap">
+        <input class="form-control" id="m-apikey" readonly placeholder="Clique em Gerar">
+        <button class="btn btn-secondary btn-sm" onclick="generateKey()">⟳ Gerar</button>
+        <button class="btn btn-ghost btn-sm" onclick="copyKey()">⎘ Copiar</button>
+      </div>
+      <div class="copy-hint">⚠ Salve esta chave — ela não será exibida novamente.</div>
+    </div>
+
+    <!-- Passo 4 — config.h -->
+    <div style="display:flex;gap:8px;align-items:center;margin:18px 0 10px">
+      <span class="step-badge">4</span>
+      <span style="font-size:12px;color:var(--t2)">
+        Cole no <code style="color:var(--blue)">config.h</code> do firmware
+      </span>
+    </div>
+    <div class="firmware-block" id="firmware-preview">
+<span class="cm">// Preencha os campos acima para ver o config.h gerado</span>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="m-confirm">Cadastrar Dispositivo</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script>
+Nav.init("devices");
+
+const currentUser = API.getUser();
+if (currentUser?.role === "ADMIN") {
+  document.getElementById("btn-new").style.display = "flex";
+}
+
+let zones = [], allUsers = [], zoneAssignments = {};
+
+// ── Inicialização ─────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([loadZones(), loadUsers()]);
+  await load();
+}
+
+async function loadZones() {
+  const data = await API.get("/zones");
+  if (!data) return;
+  zones = data;
+  const sel = document.getElementById("m-zone");
+  sel.innerHTML = zones.map(z =>
+    `<option value="${z.id}">${z.name}</option>`
+  ).join("");
+  // Carrega assignments para todas as zonas
+  await loadAllAssignments();
+  onZoneChange();
+}
+
+async function loadUsers() {
+  const data = await API.get("/users");
+  if (!data) return;
+  // Só operadores (não faz sentido atribuir ADMIN)
+  allUsers = data.filter(u => u.role === "OPERADOR" && u.active);
+  renderUserChecklist([]);
+}
+
+// Busca quais usuários estão em cada zona
+async function loadAllAssignments() {
+  // Para cada zona, busca usuários via endpoint de zonas
+  // Como não temos endpoint específico, vamos usar a lógica local:
+  // ao abrir o modal, buscamos para a zona selecionada
+  const zoneId = document.getElementById("m-zone").value;
+  await loadZoneUsers(zoneId);
+}
+
+async function loadZoneUsers(zoneId) {
+  if (!zoneId) return [];
+  // Reutiliza GET /api/users e filtra no frontend via assignments
+  // Busca direto no banco via endpoint dedicado
+  const res = await fetch(`/api/zones/${zoneId}/users`, {
+    headers: { Authorization: `Bearer ${API.getToken()}` }
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  zoneAssignments[zoneId] = data.map(u => u.id);
+  return data;
+}
+
+// ── Ao trocar de zona ─────────────────────────────────────────────────────────
+async function onZoneChange() {
+  const zoneId = document.getElementById("m-zone").value;
+  if (!zoneId) return;
+
+  const assigned = await loadZoneUsers(zoneId);
+  const assignedIds = assigned.map(u => u.id);
+
+  // Preview na zone-info
+  const preview = document.getElementById("zone-users-preview");
+  if (!assigned.length) {
+    preview.innerHTML = `<span class="zone-empty">
+      ⚠ Nenhum operador vinculado a esta zona ainda.
+      Selecione abaixo os operadores que devem ter acesso.
+    </span>`;
+  } else {
+    preview.innerHTML = `<div class="zone-users">
+      ${assigned.map(u => `
+        <span class="zone-user-chip">
+          <span class="dot"></span>${u.full_name || u.username}
+        </span>`).join("")}
+    </div>`;
+  }
+
+  renderUserChecklist(assignedIds);
+  updateFirmwarePreview();
+}
+
+// ── Lista de checkboxes ───────────────────────────────────────────────────────
+function renderUserChecklist(alreadyAssignedIds) {
+  const list = document.getElementById("user-checklist");
+  if (!allUsers.length) {
+    list.innerHTML = '<div class="text-muted" style="font-size:12px;padding:8px">Nenhum operador cadastrado</div>';
+    return;
+  }
+  list.innerHTML = allUsers.map(u => {
+    const checked = alreadyAssignedIds.includes(u.id);
+    return `
+      <label class="user-check-item ${checked ? 'checked' : ''}" id="uci-${u.id}">
+        <input type="checkbox" value="${u.id}" ${checked ? 'checked' : ''}
+          onchange="toggleCheckStyle(${u.id}, this.checked)">
+        <div>
+          <div class="uci-name">${u.full_name || u.username}</div>
+          <div class="uci-role">${u.username} · ${u.role}</div>
+        </div>
+        ${checked
+          ? '<span style="margin-left:auto;font-size:10px;color:var(--green)">já vinculado</span>'
+          : ''}
+      </label>`;
+  }).join("");
+}
+
+function toggleCheckStyle(userId, checked) {
+  const el = document.getElementById(`uci-${userId}`);
+  if (el) el.className = `user-check-item ${checked ? 'checked' : ''}`;
+}
+
+function getSelectedUserIds() {
+  return Array.from(
+    document.querySelectorAll("#user-checklist input[type=checkbox]:checked")
+  ).map(cb => Number(cb.value));
+}
+
+// ── API key + firmware preview ────────────────────────────────────────────────
+function generateKey() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  document.getElementById("m-apikey").value =
+    Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
+  updateFirmwarePreview();
+}
+
+function copyKey() {
+  const key = document.getElementById("m-apikey").value;
+  if (!key) { toast("Gere uma chave primeiro", "error"); return; }
+  navigator.clipboard.writeText(key)
+    .then(() => toast("Chave copiada!", "success"));
+}
+
+function updateFirmwarePreview() {
+  const uid    = document.getElementById("m-uid").value.trim()    || "esp32-XX";
+  const apikey = document.getElementById("m-apikey").value.trim() || "GERE_A_CHAVE_ACIMA";
+  const zoneId = document.getElementById("m-zone").value;
+  const zone   = zones.find(z => String(z.id) === String(zoneId));
+
+  document.getElementById("firmware-preview").innerHTML =
+`<span class="cm">// config.h — ${uid}${zone ? " · " + zone.name : ""}</span>
+<span class="kw">#pragma once</span>
+
+<span class="kw">#define</span> <span class="key">WIFI_SSID</span>   <span class="str">"SUA_REDE_WIFI"</span>
+<span class="kw">#define</span> <span class="key">WIFI_PASS</span>   <span class="str">"SUA_SENHA_WIFI"</span>
+<span class="kw">#define</span> <span class="key">API_BASE</span>    <span class="str">"http://192.168.137.1:3000/api"</span>
+<span class="kw">#define</span> <span class="key">API_KEY</span>     <span class="str">"${apikey}"</span>
+<span class="kw">#define</span> <span class="key">DEVICE_UID</span>  <span class="str">"${uid}"</span>`;
+}
+
+["m-uid", "m-apikey"].forEach(id =>
+  document.getElementById(id)?.addEventListener("input", updateFirmwarePreview)
+);
+
+// ── Confirmar cadastro ────────────────────────────────────────────────────────
+document.getElementById("m-confirm").addEventListener("click", async () => {
+  const uid      = document.getElementById("m-uid").value.trim();
+  const name     = document.getElementById("m-name").value.trim();
+  const location = document.getElementById("m-location").value.trim();
+  const api_key  = document.getElementById("m-apikey").value.trim();
+  const zone_id  = Number(document.getElementById("m-zone").value);
+
+  if (!uid || !name || !location || !api_key) {
+    toast("Preencha todos os campos obrigatórios (*)", "error"); return;
+  }
+  if (api_key.length !== 64 || !/^[0-9a-f]{64}$/.test(api_key)) {
+    toast("Use o botão ⟳ Gerar para criar uma API Key válida", "error"); return;
+  }
+
+  const btn = document.getElementById("m-confirm");
+  btn.disabled = true; btn.textContent = "Cadastrando...";
+
+  // 1. Cadastra o dispositivo
+  const res = await API.post("/devices", {
+    device_uid: uid, name, location, api_key, zone_id
+  });
+
+  if (res?.error) {
+    toast(res.error, "error");
+    btn.disabled = false; btn.textContent = "Cadastrar Dispositivo";
+    return;
+  }
+
+  // 2. Vincula usuários selecionados à zona (apenas os que não estão)
+  const selectedIds  = getSelectedUserIds();
+  const alreadyIds   = zoneAssignments[zone_id] || [];
+  const toAssign     = selectedIds.filter(id => !alreadyIds.includes(id));
+
+  for (const userId of toAssign) {
+    await API.post("/zones/assign", { user_id: userId, zone_id });
+  }
+
+  btn.disabled = false; btn.textContent = "Cadastrar Dispositivo";
+
+  const assignMsg = toAssign.length
+    ? ` · ${toAssign.length} operador(es) vinculado(s) à zona` : "";
+  toast(`"${name}" cadastrado com sucesso!${assignMsg}`, "success");
+  closeModal();
+  load();
+});
+
+// ── Modal open/close ──────────────────────────────────────────────────────────
+function openNew() {
+  document.getElementById("m-uid").value      = "";
+  document.getElementById("m-name").value     = "";
+  document.getElementById("m-location").value = "";
+  document.getElementById("m-apikey").value   = "";
+  onZoneChange();
+  document.getElementById("modal").classList.add("open");
+}
+function closeModal() { document.getElementById("modal").classList.remove("open"); }
+
+// ── Carregar dispositivos (tabela + cards) ────────────────────────────────────
+async function load() {
+  const [devices, users] = await Promise.all([
+    API.get("/devices"),
+    API.get("/users"),
+  ]);
+  if (!devices) return;
+
+  const online = devices.filter(d => d.online).length;
+  document.getElementById("device-count").textContent =
+    `${devices.length} total · ${online} online · ${devices.length - online} offline`;
+
+  // Cards
+  const grid = document.getElementById("devices-grid");
+  if (!devices.length) {
+    grid.innerHTML = '<div class="empty-state">Nenhum dispositivo cadastrado</div>';
+  } else {
+    grid.innerHTML = devices.map(d => {
+      const zone = zones.find(z => z.id === d.zone_id);
+      return `
+        <div class="device-card ${d.online ? 'online' : 'offline'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div class="device-name">${d.name}</div>
+            <span class="badge ${d.online ? 'badge-online' : 'badge-offline'}">
+              ${d.online ? 'ONLINE' : 'OFFLINE'}
+            </span>
+          </div>
+          <div class="device-uid">${d.device_uid}</div>
+          <div class="device-location">📍 ${d.location}</div>
+          ${zone ? `<div style="font-size:11px;color:var(--t3);margin-top:4px">🗂 ${zone.name}</div>` : ""}
+          <div class="device-last-seen" style="margin-top:10px">
+            <span style="color:var(--t3);font-size:11px">Último heartbeat:</span><br>
+            <span class="mono" style="font-size:12px">${fmtDate(d.last_seen)}</span>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  // Tabela com operadores por dispositivo
+  document.getElementById("tbody").innerHTML = devices.map(d => {
+    const zone        = zones.find(z => z.id === d.zone_id);
+    const assigned    = zoneAssignments[d.zone_id] || [];
+    const operators   = (users || [])
+      .filter(u => assigned.includes(u.id))
+      .map(u => u.full_name || u.username)
+      .join(", ") || "—";
+
+    return `<tr>
+      <td class="mono">${d.device_uid}</td>
+      <td>${d.name}</td>
+      <td>${d.location}</td>
+      <td>${zone ? zone.name : '<span class="text-muted">—</span>'}</td>
+      <td style="font-size:12px;color:var(--t2)">${operators}</td>
+      <td>${d.online
+        ? '<span class="badge badge-online">ONLINE</span>'
+        : '<span class="badge badge-offline">OFFLINE</span>'}</td>
+      <td class="mono">${fmtDate(d.last_seen)}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("poll-info").textContent =
+    "Atualizado " + new Date().toLocaleTimeString("pt-BR");
+}
+
+init();
+setInterval(load, 15000);
+</script>
+</body>
+</html>
