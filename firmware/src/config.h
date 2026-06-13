@@ -1,11 +1,11 @@
 #pragma once
 
 // ─── Wi-Fi ────────────────────────────────────────────────────────────────────
-#define WIFI_SSID   "Cavalo de Tróia"
-#define WIFI_PASS   "unko7434"
+#define WIFI_SSID   "nome_rede"
+#define WIFI_PASS   "senha"
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-#define API_BASE    "http://10.31.22.3:3000/api"
+#define API_BASE    "http:// ip_local :3000/api"
 #define API_KEY     "2963acfdb0b41f71e66ed1cf5b6a4f5c52a5bf365c1d5a2fd983362973e52965"
 #define DEVICE_UID  "esp32-02"
 //boatao 01:
